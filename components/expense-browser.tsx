@@ -67,6 +67,8 @@ export function ExpenseBrowser({ entities, centroids, latestYear, latestSplitYea
   const rows = useMemo(() => entities.map((e) => computeRow(e, year)), [entities, year]);
 
   const sidoRows = useMemo(() => basicOfSido(rows, sido), [rows, sido]);
+  const basicRows = useMemo(() => rows.filter((r) => r.type !== 'metro'), [rows]);
+  const focusCodes = useMemo(() => new Set(sidoRows.map((r) => r.code)), [sidoRows]);
   const nationalRows = useMemo(() => ofType(rows, type), [rows, type]);
   const shown = tab === 'national' ? nationalRows : sidoRows;
   const sorted = useMemo(() => sortRows(shown, metric, dir), [shown, metric, dir]);
@@ -159,7 +161,7 @@ export function ExpenseBrowser({ entities, centroids, latestYear, latestSplitYea
       )}
 
       {tab === 'map' ? (
-        <ExpenseMap rows={sidoRows} centroids={centroids} metric={metric} />
+        <ExpenseMap rows={basicRows} focusCodes={focusCodes} centroids={centroids} metric={metric} />
       ) : (
         <>
           <Summary
