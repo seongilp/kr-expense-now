@@ -279,7 +279,7 @@ export function ExpenseMap({ rows, focusCodes, centroids, metric }: Props) {
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">
-        {label} 기준 · 전국 기초 지자체 중 상위일수록 크고 붉은 점. 선택한 시도만 진하게, 점에 마우스를 올리면 경계가, 누르면 상세로 갑니다.
+        {label} 기준 · 전국 기초 지자체 중 상위일수록 크고 붉은 점. 선택한 시도는 이름표가 붙고, 점에 마우스를 올리면 경계가, 누르면 상세로 갑니다.
       </p>
       <div ref={boxRef} className="h-[70vh] min-h-[420px] w-full rounded-lg border border-border bg-card">
         {sdk === 'loading' && (
@@ -300,7 +300,7 @@ function markerHtml(r: Row, metric: Metric, t: number, focused: boolean): string
     : '';
   return (
     `<a href="/g/${r.code}" data-code="${r.code}" title="${escapeHtml(r.name)} ${escapeHtml(value)}" ` +
-    `style="display:flex;align-items:center;gap:3px;text-decoration:none;color:#e5e7eb;font:11px/1 sans-serif;opacity:${focused ? 1 : 0.35}">` +
+    `style="display:flex;align-items:center;gap:3px;text-decoration:none;color:#e5e7eb;font:11px/1 sans-serif">` +
     `<span style="width:${size}px;height:${size}px;border-radius:9999px;background:${color};opacity:.85;border:1.5px solid #0b0f19"></span>` +
     label +
     `</a>`
