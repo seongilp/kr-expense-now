@@ -20,7 +20,7 @@ export interface YearRecord {
   policy: number | null;
   /** 업무추진비 기준액 소계(기관운영+시책추진). 절감률의 분모. */
   standard: number | null;
-  /** 절감률(%) = (1 − 결산액/기준액) × 100. 출처 지표값 그대로. 음수 = 기준액 초과 집행. */
+  /** 절감률(%) = (1 − (org+policy)/standard) × 100. 원본 rate 는 2015~16 정의가 뒤집혀 있어 직접 계산. 음수 = 기준액 초과 집행. */
   savingRate: number | null;
   /** 주민등록 인구수. 출처: 주민1인당세출예산액(E8CL…). 1인당 계산의 분모. */
   population: number | null;
