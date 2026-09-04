@@ -6,12 +6,14 @@ import { ArrowDownUp, Landmark, ListOrdered, Map as MapIcon } from 'lucide-react
 import { formatMetric } from '@/lib/metric-format';
 import { METRICS, availableYears, basicOfSido, computeRow, median, ofType, rankBy, sortRows, type Metric, type SortDir } from '@/lib/rank';
 import { SIDOS, TYPE_LABEL, TYPE_ORDER, sidoOf } from '@/lib/sido';
+import { aggregateOf, yearlySeries } from '@/lib/timeline';
 import type { Centroid, Entity, EntityType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ExpenseMap } from '@/components/expense-map';
 import { RankingTable } from '@/components/ranking-table';
 import { SearchBox } from '@/components/search-box';
 import { SidoPicker } from '@/components/sido-picker';
+import { YearPicker } from '@/components/year-picker';
 
 /**
  * 앱 본체(클라이언트). 서버가 스냅샷 전체(243곳 × 연도) 를 props 로 넘기고, 연도·지표·정렬·탭 전환은
@@ -74,6 +76,15 @@ export function ExpenseBrowser({ entities, centroids, latestYear, latestSplitYea
   const sorted = useMemo(() => sortRows(shown, metric, dir), [shown, metric, dir]);
   const { rank } = useMemo(() => rankBy(shown, metric), [shown, metric]);
 
+  // 타임라인 막대: 보이는 집합의 연도별 합계/중앙값. 집합·지표가 바뀔 때만 다시 계산(연도 드래그엔 안 돈다).
+  const shownCodes = useMemo(() => new Set(shown.map((r) => r.code)), [shown]);
+  const timelineYears = useMemo(() => {
+    const min = Math.min(...years);
+    const max = Math.max(...years);
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  }, [years]);
+  const series = useMemo(() => yearlySeries(entities, shownCodes, timelineYears, metric), [entities, shownCodes, timelineYears, metric]);
+
   const onSort = (m: Metric) => {
     if (m === metric) setDir(dir === 'desc' ? 'asc' : 'desc');
     else {
@@ -86,6 +97,7 @@ export function ExpenseBrowser({ entities, centroids, latestYear, latestSplitYea
   const metroRow = rows.find((r) => r.sido === sido && r.type === 'metro');
   const splitMissing = year > latestSplitYear;
   const splitMetric = metric === 'org' || metric === 'policy' || metric === 'savingRate';
+  const metricShort = METRICS.find((m) => m.key === metric)?.short ?? metric;
 
   return (
     <div className="space-y-5">
@@ -115,22 +127,8 @@ export function ExpenseBrowser({ entities, centroids, latestYear, latestSplitYea
         </div>
       )}
 
-      {/* 연도 · 지표 · 방향 */}
+      {/* 지표 · 방향 */}
       <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-1.5 text-sm">
-          <span className="text-muted-foreground">연도</span>
-          <select
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="rounded-md border border-border bg-card px-2 py-1 text-sm"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </label>
         <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="정렬 지표">
           {METRICS.map((m) => (
             <Chip key={m.key} active={metric === m.key} onClick={() => onSort(m.key)}>
@@ -147,6 +145,16 @@ export function ExpenseBrowser({ entities, centroids, latestYear, latestSplitYea
           {dir === 'desc' ? '많은 순' : '적은 순'}
         </button>
       </div>
+
+      {/* 연도 타임라인 — 끌면 표·지도가 실시간으로 바뀐다 */}
+      <YearPicker
+        years={years}
+        year={year}
+        onChange={setYear}
+        series={series}
+        format={(v) => formatMetric(metric, v)}
+        caption={`${tab === 'national' ? `전국 ${TYPE_LABEL[type]}` : `${sidoName} 시군구`} ${metricShort} ${aggregateOf(metric) === 'sum' ? '합계' : '중앙값'}`}
+      />
 
       {splitMissing && (
         <p
